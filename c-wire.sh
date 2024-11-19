@@ -50,7 +50,7 @@ fi
 mkdir -p tmp tests
 
 # Vidage du dossier tmp
-rm -f tmp/*
+rm -f tmp/* 
 
 # Préparation du fichier temporaire
 fichier_filtre="tmp/filtre_${type_station}_${type_consommateur}.csv"
