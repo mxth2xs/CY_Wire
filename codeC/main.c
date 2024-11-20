@@ -46,12 +46,13 @@ int main(int argc, char *argv[])
 
     char *station_type = argv[1];
     char *consumer_type = argv[2];
-    char *plant_id = argv[3];
+    //char *plant_id = argv[3];
 
     char nomFichier[256]; // Taille suffisante pour stocker le chemin complet
 
     // Construire le nom de fichier dynamique
-    sprintf(nomFichier, "tmp/filter_%s_%s_%s.csv", station_type, consumer_type, plant_id);
+    sprintf(nomFichier, "tmp/filter_%s_%s.csv", station_type, consumer_type);
+    printf("EH OH: %s", nomFichier);
 
     // Ouvrir le fichier en mode lecture
     FILE *fichier = fopen(nomFichier, "r");
