@@ -1,5 +1,5 @@
-#ifndef arbre_H
-#define arbre_H
+#ifndef ARBRE_H
+#define ARBRE_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,21 +8,22 @@
 typedef struct AVLNode {
     int key;                   // Clé unique (par ex., ID de la station)
     long capacity;             // Capacité totale
-    long consumption;          // Consommation totale
+    double consumption;        // Consommation totale (changé en double pour plus de précision)
     struct AVLNode* left;      // Sous-arbre gauche
     struct AVLNode* right;     // Sous-arbre droit
     int height;                // Hauteur du nœud
 } AVLNode;
 
 // Prototypes des fonctions AVL
-AVLNode* createNode(int key, long capacity, long consumption);
+AVLNode* createNode(int key, long capacity, double consumption);  // Mis à jour pour consommation en double
 int getHeight(AVLNode* node);
 int getBalance(AVLNode* node);
 AVLNode* rotateRight(AVLNode* y);
 AVLNode* rotateLeft(AVLNode* x);
-AVLNode* insertNode(AVLNode* root, int key, long capacity, long consumption);
+AVLNode* insertNode(AVLNode* root, int key, long capacity, double consumption);  // Mis à jour pour consommation en double
 AVLNode* searchNode(AVLNode* root, int key);
 void inorderTraversal(AVLNode* root);
 void freeTree(AVLNode* root);
 
 #endif
+

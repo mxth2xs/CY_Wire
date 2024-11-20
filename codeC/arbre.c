@@ -1,7 +1,10 @@
 #include "arbre.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
 // Créer un nœud de l'arbre
-AVLNode* createNode(int key, long capacity, long consumption) {
+AVLNode* createNode(int key, long capacity, double consumption) {
     AVLNode* node = (AVLNode*)malloc(sizeof(AVLNode));
     if (!node) {
         fprintf(stderr, "Erreur d'allocation mémoire.\n");
@@ -36,6 +39,7 @@ AVLNode* rotateRight(AVLNode* y) {
     y->height = 1 + (getHeight(y->left) > getHeight(y->right) ? getHeight(y->left) : getHeight(y->right));
     x->height = 1 + (getHeight(x->left) > getHeight(x->right) ? getHeight(x->left) : getHeight(x->right));
 
+    //printf("Rotation droite effectuée sur le nœud : %d\n", y->key);
     return x;
 }
 
@@ -50,19 +54,22 @@ AVLNode* rotateLeft(AVLNode* x) {
     x->height = 1 + (getHeight(x->left) > getHeight(x->right) ? getHeight(x->left) : getHeight(x->right));
     y->height = 1 + (getHeight(y->left) > getHeight(y->right) ? getHeight(y->left) : getHeight(y->right));
 
+    //printf("Rotation gauche effectuée sur le nœud : %d\n", x->key);
     return y;
 }
 
 // Insertion dans l'arbre AVL
-AVLNode* insertNode(AVLNode* root, int key, long capacity, long consumption) {
-    if (!root) return createNode(key, capacity, consumption);
+AVLNode* insertNode(AVLNode* root, int key, long capacity, double consumption) {
+    // Si l'arbre est vide, créer un nouveau nœud
+    if (!root) {
+        return createNode(key, capacity, consumption);
+    }
 
     if (key < root->key) {
         root->left = insertNode(root->left, key, capacity, consumption);
     } else if (key > root->key) {
         root->right = insertNode(root->right, key, capacity, consumption);
     } else {
-        // Mise à jour si le nœud existe déjà
         root->capacity += capacity;
         root->consumption += consumption;
         return root;
@@ -71,24 +78,22 @@ AVLNode* insertNode(AVLNode* root, int key, long capacity, long consumption) {
     // Mise à jour de la hauteur
     root->height = 1 + (getHeight(root->left) > getHeight(root->right) ? getHeight(root->left) : getHeight(root->right));
 
-    // Vérification de l'équilibre et rotation si nécessaire
+    // Vérification de l'équilibre et rotations si nécessaires
     int balance = getBalance(root);
 
-    // Rotation gauche-gauche
-    if (balance > 1 && key < root->left->key)
+    if (balance > 1 && key < root->left->key) {
         return rotateRight(root);
+    }
 
-    // Rotation droite-droite
-    if (balance < -1 && key > root->right->key)
+    if (balance < -1 && key > root->right->key) {
         return rotateLeft(root);
+    }
 
-    // Rotation gauche-droite
     if (balance > 1 && key > root->left->key) {
         root->left = rotateLeft(root->left);
         return rotateRight(root);
     }
 
-    // Rotation droite-gauche
     if (balance < -1 && key < root->right->key) {
         root->right = rotateRight(root->right);
         return rotateLeft(root);
@@ -99,22 +104,30 @@ AVLNode* insertNode(AVLNode* root, int key, long capacity, long consumption) {
 
 // Recherche dans l'arbre AVL
 AVLNode* searchNode(AVLNode* root, int key) {
-    if (!root || root->key == key)
-        return root;
+    if (!root) {
+        printf("Recherche échouée : Nœud avec la clé %d introuvable (arbre vide ou nœud inexistant).\n", key);
+        return NULL;
+    }
 
-    if (key < root->key)
+    if (root->key == key) {
+        printf("Nœud trouvé : Key=%d, Capacity=%ld, Consumption=%.2f\n", root->key, root->capacity, root->consumption);
+        return root;
+    }
+
+    if (key < root->key) {
         return searchNode(root->left, key);
-    else
+    } else {
         return searchNode(root->right, key);
+    }
 }
 
 // Parcours In-Order de l'arbre
 void inorderTraversal(AVLNode* root) {
-    if (root) {
-        inorderTraversal(root->left);
-        printf("ID: %d, Capacity: %ld, Consumption: %ld\n", root->key, root->capacity, root->consumption);
-        inorderTraversal(root->right);
-    }
+    if (!root) return;
+
+    inorderTraversal(root->left);
+    printf("ID: %d, Capacity: %ld, Consumption: %.2f\n", root->key, root->capacity, root->consumption);
+    inorderTraversal(root->right);
 }
 
 // Libérer la mémoire
