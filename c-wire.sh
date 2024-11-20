@@ -4,6 +4,9 @@
 # Author: Pfleger Paul, Da Costa Silva Mathias
 # Usage: ./c-wire.sh csv_file_path station_type consumer_type [plant_id]
 
+
+start=$(date +%s) 
+
 # Parameter validation
 if [ "$#" -lt 3 ]; then
     echo "Error: Insufficient number of parameters."
@@ -105,6 +108,14 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "Result available at tmp/filter_${station_type}_${consumer_type}_${plant_id}.csv"
+if [ "$plant_id" == "-1" ]; then
+    echo "Result available at tmp/filter_${station_type}_${consumer_type}.csv"
+else
+    echo "Result available at tmp/filter_${station_type}_${consumer_type}_${plant_id}.csv"
+fi
 
 echo "Processing complete."
+
+end=$(date +%s)
+duration=$((end - start))
+echo "temps execution: $duration s"
