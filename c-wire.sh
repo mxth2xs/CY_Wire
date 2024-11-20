@@ -93,7 +93,7 @@ echo "Filtered data saved to $filtered_file"
 # Checking and compiling the C program
 if [ ! -f "codeC/main" ]; then
     echo "Compiling the C program..."
-    make -C codeC
+    make -s -C codeC
     if [ $? -ne 0 ]; then
         echo "Error: Failed to compile the C program."
         exit 1
