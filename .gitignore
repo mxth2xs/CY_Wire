@@ -52,3 +52,4 @@ Mkfile.old
 dkms.conf
 input/c-wire_v25.dat
 tests/*
+tmp/*
