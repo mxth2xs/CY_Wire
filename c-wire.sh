@@ -15,7 +15,7 @@ fi
 csv_file="$1"
 station_type="$2"
 consumer_type="$3"
-plant_id="${4:-}" # Optional
+plant_id="${4:--1}" # Optional, defaults to -1 if not provided
 
 # Input file validation
 if [ ! -f "$csv_file" ]; then
@@ -36,7 +36,7 @@ if [[ "$consumer_type" != "comp" && "$consumer_type" != "indiv" && "$consumer_ty
 fi
 
 # Plant ID validation (if provided)
-if [ -n "$plant_id" ]; then
+if [ "$plant_id" != "-1" ]; then
     echo "Checking plant ID: $plant_id"
     valid_id=$(awk -F';' -v id="$plant_id" '$1 == id {print $1; exit}' "$csv_file")
     if [ -z "$valid_id" ]; then
@@ -63,27 +63,31 @@ mkdir -p tmp tests
 rm -f tmp/* 
 
 # Preparing the temporary file
-filtered_file="tmp/filter_${station_type}_${consumer_type}.csv"
+if [ "$plant_id" == "-1" ]; then
+    filtered_file="tmp/filter_${station_type}_${consumer_type}.csv"
+else
+    filtered_file="tmp/filter_${station_type}_${consumer_type}_${plant_id}.csv"
+fi
 
 # Filtering data from the CSV file
 awk -F';' -v station="$station_type" -v consumer="$consumer_type" -v plant="$plant_id" '
 BEGIN { OFS=";" }
 {
     if (station == "hvb" && $2 != "-" && $6 == "-" && (consumer == "comp" || consumer == "all")) {
-        if (plant == "" || $1 == plant) print $0;
+        if (plant == "-1" || $1 == plant) print $0;
     }
     else if (station == "hva" && $3 != "-" && $6 == "-" && (consumer == "comp" || consumer == "all")) {
-        if (plant == "" || $1 == plant) print $0;
+        if (plant == "-1" || $1 == plant) print $0;
     }
     else if (station == "lv" && $4 != "-" && (consumer == "comp" || consumer == "indiv" || consumer == "all")) {
-        if (plant == "" || $1 == plant) print $0;
+        if (plant == "-1" || $1 == plant) print $0;
     }
 }' "$csv_file" > "$filtered_file"
 
 echo "Filtered data saved to $filtered_file"
 
 # Checking and compiling the C program
-if [ ! -f "codeC/c-wire" ]; then
+if [ ! -f "codeC/main" ]; then
     echo "Compiling the C program..."
     make -C codeC
     if [ $? -ne 0 ]; then
@@ -94,12 +98,13 @@ fi
 
 # Executing the C program
 echo "Executing the C program..."
-./codeC/c-wire "$filtered_file" "tmp/result_${station_type}_${consumer_type}.csv"
+
+./codeC/main "$station_type" "$consumer_type" "$plant_id"
 if [ $? -ne 0 ]; then
     echo "Error: Failed to execute the C program."
     exit 1
 fi
 
-echo "Result available at tmp/result_${station_type}_${consumer_type}.csv"
+echo "Result available at tmp/filter_${station_type}_${consumer_type}_${plant_id}.csv"
 
 echo "Processing complete."
