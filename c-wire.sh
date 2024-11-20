@@ -35,6 +35,16 @@ if [[ "$type_consommateur" != "comp" && "$type_consommateur" != "indiv" && "$typ
     exit 1
 fi
 
+# Vérification de l'identifiant de la centrale (si fourni)
+if [ -n "$identifiant_centrale" ]; then
+    echo "Vérification de l'ID de la centrale : $identifiant_centrale"
+    id_valide=$(awk -F';' -v id="$identifiant_centrale" '$1 == id {print $1; exit}' "$fichier_csv")
+    if [ -z "$id_valide" ]; then
+        echo "Erreur : L'identifiant de la centrale $identifiant_centrale n'existe pas dans le fichier."
+        exit 1
+    fi
+fi
+    
 # Filtrage des options interdites
 if [[ "$type_station" == "hvb" && ( "$type_consommateur" == "all" || "$type_consommateur" == "indiv" ) ]]; then
     echo "Erreur : Les options hvb all ou hvb indiv sont interdites."
