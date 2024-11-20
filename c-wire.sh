@@ -79,7 +79,7 @@ BEGIN { OFS=";" }
     else if (station == "hva" && $3 != "-" && $6 == "-" && (consumer == "comp" || consumer == "all")) {
         if (plant == "-1" || $1 == plant) print $0;
     }
-    else if (station == "lv" && $4 != "-" && (consumer == "comp" || consumer == "indiv" || consumer == "all")) {
+    else if (station == "lv" && $4 != "-" && $1 != "Power plant" && (consumer == "comp" || consumer == "indiv" || consumer == "all")) {
         if (plant == "-1" || $1 == plant) print $0;
     }
 }' "$csv_file" > "$filtered_file"
