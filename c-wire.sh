@@ -1,105 +1,105 @@
 #!/bin/bash
 
-# Script Shell pour le projet C-Wire 
-# Auteur: Pfleger Paul, Da Costa Silva Mathias
-# Usage : ./c-wire.sh chemin_du_fichier.csv type_station type_consommateur [identifiant_centrale]
+# Shell Script for the C-Wire Project
+# Author: Pfleger Paul, Da Costa Silva Mathias
+# Usage: ./c-wire.sh csv_file_path station_type consumer_type [plant_id]
 
-# Validation des paramètres
+# Parameter validation
 if [ "$#" -lt 3 ]; then
-    echo "Erreur : Nombre de paramètres insuffisant."
-    echo "Usage : ./c-wire.sh chemin_du_fichier.csv type_station type_consommateur [identifiant_centrale]"
+    echo "Error: Insufficient number of parameters."
+    echo "Usage: ./c-wire.sh csv_file_path station_type consumer_type [plant_id]"
     exit 1
 fi
 
-# Récupération des paramètres
-fichier_csv="$1"
-type_station="$2"
-type_consommateur="$3"
-identifiant_centrale="${4:-}" # Optionnel
+# Retrieving parameters
+csv_file="$1"
+station_type="$2"
+consumer_type="$3"
+plant_id="${4:-}" # Optional
 
-# Vérification du fichier d'entrée
-if [ ! -f "$fichier_csv" ]; then
-    echo "Erreur : Le fichier $fichier_csv n'existe pas."
+# Input file validation
+if [ ! -f "$csv_file" ]; then
+    echo "Error: The file $csv_file does not exist."
     exit 1
 fi
 
-# Vérification des types de station
-if [[ "$type_station" != "hvb" && "$type_station" != "hva" && "$type_station" != "lv" ]]; then
-    echo "Erreur : Type de station invalide. Les options valides sont : hvb, hva, lv."
+# Station type validation
+if [[ "$station_type" != "hvb" && "$station_type" != "hva" && "$station_type" != "lv" ]]; then
+    echo "Error: Invalid station type. Valid options are: hvb, hva, lv."
     exit 1
 fi
 
-# Vérification des types de consommateur
-if [[ "$type_consommateur" != "comp" && "$type_consommateur" != "indiv" && "$type_consommateur" != "all" ]]; then
-    echo "Erreur : Type de consommateur invalide. Les options valides sont : comp, indiv, all."
+# Consumer type validation
+if [[ "$consumer_type" != "comp" && "$consumer_type" != "indiv" && "$consumer_type" != "all" ]]; then
+    echo "Error: Invalid consumer type. Valid options are: comp, indiv, all."
     exit 1
 fi
 
-# Vérification de l'identifiant de la centrale (si fourni)
-if [ -n "$identifiant_centrale" ]; then
-    echo "Vérification de l'ID de la centrale : $identifiant_centrale"
-    id_valide=$(awk -F';' -v id="$identifiant_centrale" '$1 == id {print $1; exit}' "$fichier_csv")
-    if [ -z "$id_valide" ]; then
-        echo "Erreur : L'identifiant de la centrale $identifiant_centrale n'existe pas dans le fichier."
+# Plant ID validation (if provided)
+if [ -n "$plant_id" ]; then
+    echo "Checking plant ID: $plant_id"
+    valid_id=$(awk -F';' -v id="$plant_id" '$1 == id {print $1; exit}' "$csv_file")
+    if [ -z "$valid_id" ]; then
+        echo "Error: The plant ID $plant_id does not exist in the file."
         exit 1
     fi
 fi
-    
-# Filtrage des options interdites
-if [[ "$type_station" == "hvb" && ( "$type_consommateur" == "all" || "$type_consommateur" == "indiv" ) ]]; then
-    echo "Erreur : Les options hvb all ou hvb indiv sont interdites."
+
+# Prohibiting certain options
+if [[ "$station_type" == "hvb" && ( "$consumer_type" == "all" || "$consumer_type" == "indiv" ) ]]; then
+    echo "Error: Options hvb all or hvb indiv are not allowed."
     exit 1
 fi
 
-if [[ "$type_station" == "hva" && ( "$type_consommateur" == "all" || "$type_consommateur" == "indiv" ) ]]; then
-    echo "Erreur : Les options hva all ou hva indiv sont interdites."
+if [[ "$station_type" == "hva" && ( "$consumer_type" == "all" || "$consumer_type" == "indiv" ) ]]; then
+    echo "Error: Options hva all or hva indiv are not allowed."
     exit 1
 fi
 
-# Création des dossiers nécessaires
+# Creating necessary directories
 mkdir -p tmp tests
 
-# Vidage du dossier tmp
+# Clearing the tmp directory
 rm -f tmp/* 
 
-# Préparation du fichier temporaire
-fichier_filtre="tmp/filtre_${type_station}_${type_consommateur}.csv"
+# Preparing the temporary file
+filtered_file="tmp/filter_${station_type}_${consumer_type}.csv"
 
-# Filtrage des données dans le fichier CSV
-awk -F';' -v station="$type_station" -v consommateur="$type_consommateur" -v centrale="$identifiant_centrale" '
+# Filtering data from the CSV file
+awk -F';' -v station="$station_type" -v consumer="$consumer_type" -v plant="$plant_id" '
 BEGIN { OFS=";" }
 {
-    if (station == "hvb" && $2 != "-" && $6 == "-" && (consommateur == "comp" || consommateur == "all")) {
-        if (centrale == "" || $1 == centrale) print $0;
+    if (station == "hvb" && $2 != "-" && $6 == "-" && (consumer == "comp" || consumer == "all")) {
+        if (plant == "" || $1 == plant) print $0;
     }
-    else if (station == "hva" && $3 != "-" && $6 == "-" && (consommateur == "comp" || consommateur == "all")) {
-        if (centrale == "" || $1 == centrale) print $0;
+    else if (station == "hva" && $3 != "-" && $6 == "-" && (consumer == "comp" || consumer == "all")) {
+        if (plant == "" || $1 == plant) print $0;
     }
-    else if (station == "lv" && $4 != "-" && (consommateur == "comp" || consommateur == "indiv" || consommateur == "all")) {
-        if (centrale == "" || $1 == centrale) print $0;
+    else if (station == "lv" && $4 != "-" && (consumer == "comp" || consumer == "indiv" || consumer == "all")) {
+        if (plant == "" || $1 == plant) print $0;
     }
-}' "$fichier_csv" > "$fichier_filtre"
+}' "$csv_file" > "$filtered_file"
 
-echo "Les données filtrées sont sauvegardées dans $fichier_filtre"
+echo "Filtered data saved to $filtered_file"
 
-# Vérification et compilation du programme C
+# Checking and compiling the C program
 if [ ! -f "codeC/c-wire" ]; then
-    echo "Compilation du programme C en cours..."
+    echo "Compiling the C program..."
     make -C codeC
     if [ $? -ne 0 ]; then
-        echo "Erreur : Échec de la compilation du programme C."
+        echo "Error: Failed to compile the C program."
         exit 1
     fi
 fi
 
-# Exécution du programme C
-echo "Exécution du programme C..."
-./codeC/c-wire "$fichier_filtre" "tmp/resultat_${type_station}_${type_consommateur}.csv"
+# Executing the C program
+echo "Executing the C program..."
+./codeC/c-wire "$filtered_file" "tmp/result_${station_type}_${consumer_type}.csv"
 if [ $? -ne 0 ]; then
-    echo "Erreur : Échec lors de l'exécution du programme C."
+    echo "Error: Failed to execute the C program."
     exit 1
 fi
 
-echo "Résultat disponible dans tmp/resultat_${type_station}_${type_consommateur}.csv"
+echo "Result available at tmp/result_${station_type}_${consumer_type}.csv"
 
-echo "Traitement terminé."
+echo "Processing complete."
