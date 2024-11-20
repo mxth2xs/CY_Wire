@@ -21,12 +21,10 @@ void readline(int columnequal, AVLNode* arbre, FILE* fichier, char* ligne){
         // Vérifier si la ligne correspond au type de station spécifié
         if (colonnes[6][0] != '-' && colonnes[columnequal][0] == '-')
         {
-            // Lire la consommation
-            long consommation = atol(colonnes[6]); // Colonne 6 = capacité ou charge
-            insertNode(arbre, colonnes[columnequal], colonnes[6], 0);
+            insertNode(arbre, *colonnes[columnequal], *colonnes[6], 0);
         }
         else{
-            AVLNode* noeud = searchNode(arbre, colonnes[columnequal]);
+            AVLNode* noeud = searchNode(arbre, *colonnes[columnequal]);
             if(colonnes[7][0] != '-'){
                 noeud->consumption+=atol(colonnes[7]);
             }
