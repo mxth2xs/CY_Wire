@@ -37,15 +37,15 @@ void generateGnuplotScript(const char* scriptPath) {
 
     fprintf(gp,
             "set terminal png size 1200,600\n"
-            "set output '/home/cytech/CY_Wire/output/lv_chart.png'\n"
+            "set output 'output/lv_chart.png'\n"
             "set title 'Top 10 and Bottom 10 LV Stations by Load'\n"
             "set boxwidth 0.5 relative\n"
             "set style fill solid\n"
             "set ylabel 'Load (kW)'\n"
             "set xlabel 'Station ID'\n"
             "set xtics rotate by -45\n"
-            "plot '/home/cytech/CY_Wire/output/lv_top10.dat' using 0:3:2:3 with boxes lc rgb 'red' title 'Top 10', \\\n"
-            "     '/home/cytech/CY_Wire/output/lv_bottom10.dat' using 0:3:2:3 with boxes lc rgb 'green' title 'Bottom 10'\n");
+            "plot 'output/lv_top10.dat' using 0:3:2:3 with boxes lc rgb 'red' title 'Top 10', \\\n"
+            "     'output/lv_bottom10.dat' using 0:3:2:3 with boxes lc rgb 'green' title 'Bottom 10'\n");
     fclose(gp);
 }
 
@@ -123,13 +123,8 @@ int main(int argc, char *argv[]) {
 
     fclose(fichier);
 
-    struct stat st = {0};
-    if (stat("/home/cytech/CY_Wire/output", &st) == -1) {
-        mkdir("/home/cytech/CY_Wire/output", 0755);
-    }
-
     char outputFichier[256];
-    sprintf(outputFichier, "/home/cytech/CY_Wire/output/output_%s.csv", station_type);
+    sprintf(outputFichier, "output/output_%s.csv", station_type);
     FILE *outputFile = fopen(outputFichier, "w");
     if (outputFile == NULL) {
         perror("Erreur d'ouverture du fichier de sortie");
@@ -142,7 +137,7 @@ int main(int argc, char *argv[]) {
     fclose(outputFile);
 
     if (strcmp(station_type, "lv") == 0 && strcmp(consumer_type, "all") == 0) {
-        FILE* top10Data = fopen("/home/cytech/CY_Wire/output/lv_top10.dat", "w");
+        FILE* top10Data = fopen("output/lv_top10.dat", "w");
         if (!top10Data) {
             perror("Erreur d'ouverture du fichier pour les 10 postes les plus chargés");
             freeTree(arbre);
@@ -152,7 +147,7 @@ int main(int argc, char *argv[]) {
         generateTopAndBottom10Data(arbre, top10Data, &count, 10, 1);
         fclose(top10Data);
 
-        FILE* bottom10Data = fopen("/home/cytech/CY_Wire/output/lv_bottom10.dat", "w");
+        FILE* bottom10Data = fopen("output/lv_bottom10.dat", "w");
         if (!bottom10Data) {
             perror("Erreur d'ouverture du fichier pour les 10 postes les moins chargés");
             freeTree(arbre);
@@ -162,8 +157,8 @@ int main(int argc, char *argv[]) {
         generateTopAndBottom10Data(arbre, bottom10Data, &count, 10, 0);
         fclose(bottom10Data);
 
-        generateGnuplotScript("/home/cytech/CY_Wire/output/lv_plot.gp");
-        system("gnuplot /home/cytech/CY_Wire/output/lv_plot.gp");
+        generateGnuplotScript("output/lv_plot.gp");
+        system("gnuplot output/lv_plot.gp");
     }
 
     freeTree(arbre);
