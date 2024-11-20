@@ -66,12 +66,14 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s <station_type> <consumer_type> <plant_id>\n", argv[0]);
         return EXIT_FAILURE;
     }
-
+    
+    printf("Ta gueules");    
     char *station_type = argv[1];
     char *consumer_type = argv[2];
     char *plant_id = argv[3];
 
-    char nomFichier[256]; // Taille suffisante pour stocker le chemin complet
+    printf("Ta gueule");
+    char nomFichier[2048]; // Taille suffisante pour stocker le chemin complet
 
     // Construire le nom de fichier dynamique
     if (strcmp(plant_id, "-1") == 0) {
