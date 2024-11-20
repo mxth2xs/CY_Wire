@@ -2,14 +2,13 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
 LDFLAGS =
-SRCDIR = codeC
-OBJDIR = $(SRCDIR)/obj
-BINDIR = $(SRCDIR)/bin
+OBJDIR = obj
+BINDIR = bin
 EXEC = main
 
-# Liste des fichiers sources et objets
-SRCS = $(wildcard $(SRCDIR)/*.c)
-OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
+# Détecter automatiquement les fichiers source et objets
+SRCS = $(wildcard *.c)
+OBJS = $(patsubst %.c, $(OBJDIR)/%.o, $(SRCS))
 
 # Règle par défaut
 all: directories $(BINDIR)/$(EXEC)
@@ -19,26 +18,18 @@ directories:
 	mkdir -p $(OBJDIR)
 	mkdir -p $(BINDIR)
 
-# Règle pour générer l'exécutable
+# Compilation de l'exécutable
 $(BINDIR)/$(EXEC): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
-# Règle pour compiler les fichiers objets
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+# Compilation des fichiers objets
+$(OBJDIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Nettoyer les fichiers générés
+# Nettoyage des fichiers temporaires
 clean:
-	rm -rf $(OBJDIR) $(BINDIR)
+	rm -rf $(OBJDIR)
 
-# Nettoyer les fichiers générés et l'exécutable
+# Nettoyage complet (inclut l'exécutable)
 distclean: clean
-	rm -f $(BINDIR)/$(EXEC)
-
-# Aide
-help:
-	@echo "Options de Makefile :"
-	@echo "  all        - Compile le programme."
-	@echo "  clean      - Supprime les fichiers objets et les répertoires temporaires."
-	@echo "  distclean  - Supprime tout, y compris l'exécutable."
-	@echo "  help       - Affiche ce message d'aide."
+	rm -rf $(BINDIR)
