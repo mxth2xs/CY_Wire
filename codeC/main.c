@@ -39,19 +39,22 @@ void readline(int columnequal, AVLNode* arbre, FILE* fichier, char* ligne){
 int main(int argc, char *argv[])
 {
     // Vérifier que 3 arguments sont fournis
-    if (argc != 4)
+    if (argc != 3)
     {
         return -1; // Retourner une erreur
     }
-
+    
+    printf("Ta gueules");    
     char *station_type = argv[1];
     char *consumer_type = argv[2];
     //char *plant_id = argv[3];
 
-    char nomFichier[256]; // Taille suffisante pour stocker le chemin complet
+    printf("Ta gueule");
+    char nomFichier[2048]; // Taille suffisante pour stocker le chemin complet
 
     // Construire le nom de fichier dynamique
-    sprintf(nomFichier, "tmp/filter_%s_%s.csv", station_type, consumer_type);
+    printf("Coucou");
+    sprintf(nomFichier, "../../tmp/filter_%s_%s.csv", station_type, consumer_type);
     printf("EH OH: %s", nomFichier);
 
     // Ouvrir le fichier en mode lecture
