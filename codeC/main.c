@@ -1,24 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "arbre.h"
 
-// Fonction pour écrire le parcours In-Order dans un fichier CSV
-void writeInorderToCSV(AVLNode* root, FILE* outputFile, const char* station_type) {
-    if (!root) {
-        return;
-    }
-
-    // Parcourir le sous-arbre gauche
-    writeInorderToCSV(root->left, outputFile, station_type);
-
-    // Écrire les données du nœud courant dans le fichier
-    fprintf(outputFile, "%d:%ld:%.2f\n", root->key, root->capacity, root->consumption);
-
-    // Parcourir le sous-arbre droit
-    writeInorderToCSV(root->right, outputFile, station_type);
-}
-
+// Fonction pour lire le fichier CSV et construire l'arbre AVL
 void readline(int columnequal, AVLNode** arbre, FILE* fichier) {
     char ligne[1024]; // Buffer pour lire chaque ligne du fichier
     int ligne_num = 0; // Compteur de lignes
@@ -60,20 +47,19 @@ void readline(int columnequal, AVLNode** arbre, FILE* fichier) {
     printf("Lecture du fichier terminée. Total de lignes lues : %d\n", ligne_num);
 }
 
+// Fonction principale
 int main(int argc, char *argv[]) {
     // Vérifier que 3 arguments sont fournis
     if (argc != 4) {
         fprintf(stderr, "Usage: %s <station_type> <consumer_type> <plant_id>\n", argv[0]);
         return EXIT_FAILURE;
     }
-    
-    printf("Ta gueules");    
+
     char *station_type = argv[1];
     char *consumer_type = argv[2];
     char *plant_id = argv[3];
 
-    printf("Ta gueule");
-    char nomFichier[2048]; // Taille suffisante pour stocker le chemin complet
+    char nomFichier[256]; // Taille suffisante pour stocker le chemin complet
 
     // Construire le nom de fichier dynamique
     if (strcmp(plant_id, "-1") == 0) {
@@ -106,9 +92,13 @@ int main(int argc, char *argv[]) {
 
     fclose(fichier);
 
+        struct stat st = {0};
+    if (stat("/home/cytech/CY_Wire/output", &st) == -1) {
+        mkdir("/home/cytech/CY_Wire/output", 0755);
+    }
     // Créer le fichier CSV de sortie
     char outputFichier[256];
-    sprintf(outputFichier, "output_%s.csv", station_type);
+    sprintf(outputFichier, "/home/cytech/CY_Wire/output/output_%s.csv", station_type); // Chemin absolu pour le fichier de sortie
     FILE *outputFile = fopen(outputFichier, "w");
     if (outputFile == NULL) {
         perror("Erreur d'ouverture du fichier de sortie");
@@ -116,11 +106,11 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Écrire l'en-tête du fichier CSV (sans ':' entre ID et station_type)
+    // Écrire l'en-tête du fichier CSV
     fprintf(outputFile, "ID%s:Capacity:Consumption\n", station_type);
 
-    // Écrire les données de l'arbre dans le fichier CSV
-    writeInorderToCSV(arbre, outputFile, station_type);
+    // Écrire les données triées par capacité dans le fichier CSV
+    inorderTraversalToCSV(arbre, outputFile);
 
     printf("Parcours In-Order enregistré dans le fichier : %s\n", outputFichier);
 

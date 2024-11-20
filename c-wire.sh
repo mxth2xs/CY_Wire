@@ -60,10 +60,11 @@ if [[ "$station_type" == "hva" && ( "$consumer_type" == "all" || "$consumer_type
 fi
 
 # Creating necessary directories
-mkdir -p tmp tests
+mkdir -p tmp output
 
 # Clearing the tmp directory
 rm -f tmp/* 
+rm -f output/*
 
 # Preparing the temporary file
 if [ "$plant_id" == "-1" ]; then
@@ -101,7 +102,6 @@ fi
 
 # Executing the C program
 echo "Executing the C program..."
-echo $(pwd)
 
 ./codeC/bin/main "$station_type" "$consumer_type" "$plant_id"
 if [ $? -ne 0 ]; then

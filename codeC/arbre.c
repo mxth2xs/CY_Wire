@@ -1,7 +1,4 @@
 #include "arbre.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 
 // Créer un nœud de l'arbre
 AVLNode* createNode(int key, long capacity, double consumption) {
@@ -39,7 +36,6 @@ AVLNode* rotateRight(AVLNode* y) {
     y->height = 1 + (getHeight(y->left) > getHeight(y->right) ? getHeight(y->left) : getHeight(y->right));
     x->height = 1 + (getHeight(x->left) > getHeight(x->right) ? getHeight(x->left) : getHeight(x->right));
 
-    //printf("Rotation droite effectuée sur le nœud : %d\n", y->key);
     return x;
 }
 
@@ -54,47 +50,42 @@ AVLNode* rotateLeft(AVLNode* x) {
     x->height = 1 + (getHeight(x->left) > getHeight(x->right) ? getHeight(x->left) : getHeight(x->right));
     y->height = 1 + (getHeight(y->left) > getHeight(y->right) ? getHeight(y->left) : getHeight(y->right));
 
-    //printf("Rotation gauche effectuée sur le nœud : %d\n", x->key);
     return y;
 }
 
 // Insertion dans l'arbre AVL
 AVLNode* insertNode(AVLNode* root, int key, long capacity, double consumption) {
-    // Si l'arbre est vide, créer un nouveau nœud
     if (!root) {
         return createNode(key, capacity, consumption);
     }
 
-    if (key < root->key) {
+    if (capacity < root->capacity) {
         root->left = insertNode(root->left, key, capacity, consumption);
-    } else if (key > root->key) {
+    } else if (capacity > root->capacity) {
         root->right = insertNode(root->right, key, capacity, consumption);
     } else {
-        root->capacity += capacity;
         root->consumption += consumption;
-        return root;
+        root->key = key; // Mettre à jour la clé associée
     }
 
-    // Mise à jour de la hauteur
     root->height = 1 + (getHeight(root->left) > getHeight(root->right) ? getHeight(root->left) : getHeight(root->right));
 
-    // Vérification de l'équilibre et rotations si nécessaires
     int balance = getBalance(root);
 
-    if (balance > 1 && key < root->left->key) {
+    if (balance > 1 && capacity < root->left->capacity) {
         return rotateRight(root);
     }
 
-    if (balance < -1 && key > root->right->key) {
+    if (balance < -1 && capacity > root->right->capacity) {
         return rotateLeft(root);
     }
 
-    if (balance > 1 && key > root->left->key) {
+    if (balance > 1 && capacity > root->left->capacity) {
         root->left = rotateLeft(root->left);
         return rotateRight(root);
     }
 
-    if (balance < -1 && key < root->right->key) {
+    if (balance < -1 && capacity < root->right->capacity) {
         root->right = rotateRight(root->right);
         return rotateLeft(root);
     }
@@ -102,32 +93,18 @@ AVLNode* insertNode(AVLNode* root, int key, long capacity, double consumption) {
     return root;
 }
 
-// Recherche dans l'arbre AVL
-AVLNode* searchNode(AVLNode* root, int key) {
+// Parcours In-Order pour écrire dans un fichier CSV
+void inorderTraversalToCSV(AVLNode* root, FILE* outputFile) {
     if (!root) {
-        printf("Recherche échouée : Nœud avec la clé %d introuvable (arbre vide ou nœud inexistant).\n", key);
-        return NULL;
+        return;
     }
 
-    if (root->key == key) {
-        printf("Nœud trouvé : Key=%d, Capacity=%ld, Consumption=%.2f\n", root->key, root->capacity, root->consumption);
-        return root;
-    }
+    inorderTraversalToCSV(root->left, outputFile);
 
-    if (key < root->key) {
-        return searchNode(root->left, key);
-    } else {
-        return searchNode(root->right, key);
-    }
-}
+    // Écrire les données du nœud courant dans le fichier
+    fprintf(outputFile, "%d:%ld:%.2f\n", root->key, root->capacity, root->consumption);
 
-// Parcours In-Order de l'arbre
-void inorderTraversal(AVLNode* root) {
-    if (!root) return;
-
-    inorderTraversal(root->left);
-    printf("ID: %d, Capacity: %ld, Consumption: %.2f\n", root->key, root->capacity, root->consumption);
-    inorderTraversal(root->right);
+    inorderTraversalToCSV(root->right, outputFile);
 }
 
 // Libérer la mémoire
