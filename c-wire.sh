@@ -4,8 +4,7 @@
 # Author: Pfleger Paul, Da Costa Silva Mathias
 # Usage: ./c-wire.sh csv_file_path station_type consumer_type [plant_id]
 
-
-start=$(date +%s) 
+start=$(date +%s)
 
 # Parameter validation
 if [ "$#" -lt 3 ]; then
@@ -63,7 +62,7 @@ fi
 mkdir -p tmp output
 
 # Clearing the tmp directory
-rm -f tmp/* 
+rm -f tmp/*
 rm -f output/*
 
 # Preparing the temporary file
@@ -91,7 +90,7 @@ BEGIN { OFS=";" }
 echo "Filtered data saved to $filtered_file"
 
 # Checking and compiling the C program
-if [ ! -f "codeC/main" ]; then
+if [ ! -f "codeC/bin/main" ]; then
     echo "Compiling the C program..."
     make -s -C codeC
     if [ $? -ne 0 ]; then
@@ -102,15 +101,52 @@ fi
 
 # Executing the C program
 echo "Executing the C program..."
-
 ./codeC/bin/main "$station_type" "$consumer_type" "$plant_id"
 if [ $? -ne 0 ]; then
     echo "Error: Failed to execute the C program."
     exit 1
 fi
 
+# Generate graphs if lv all
+if [[ "$station_type" == "lv" && "$consumer_type" == "all" ]]; then
+    echo "Generating graphs for LV all..."
+    
+    # Verify if data files for Gnuplot exist
+    top10_data="output/lv_top10.dat"
+    bottom10_data="output/lv_bottom10.dat"
+    plot_script="output/lv_plot.gp"
+    chart_output="output/lv_chart.png"
+
+    if [[ -f "$top10_data" && -f "$bottom10_data" ]]; then
+        echo "Creating Gnuplot script..."
+        cat <<EOF > "$plot_script"
+set terminal png size 1200,600
+set output "$chart_output"
+set title "Top 10 and Bottom 10 LV Stations by Load"
+set boxwidth 0.5 relative
+set style fill solid
+set ylabel "Load (kW)"
+set xlabel "Station ID"
+set xtics rotate by -45
+plot "$top10_data" using 0:3:2:3 with boxes lc rgb "red" title "Top 10", \
+     "$bottom10_data" using 0:3:2:3 with boxes lc rgb "green" title "Bottom 10"
+EOF
+
+        echo "Executing Gnuplot..."
+        gnuplot "$plot_script"
+
+        if [ $? -eq 0 ]; then
+            echo "Graph successfully generated: $chart_output"
+        else
+            echo "Error: Failed to generate the graph."
+        fi
+    else
+        echo "Error: Data files for Gnuplot not found."
+    fi
+fi
+
 echo "Processing complete."
 
 end=$(date +%s)
 duration=$((end - start))
-echo "temps execution: $duration s"
+echo "Execution time: $duration s"

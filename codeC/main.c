@@ -5,15 +5,57 @@
 #include <sys/types.h>
 #include "arbre.h"
 
-// Fonction pour lire le fichier CSV et construire l'arbre AVL
+void generateTopAndBottom10Data(AVLNode* root, FILE* dataFile, int* count, int limit, int isTop) {
+    if (!root || *count >= limit) {
+        return;
+    }
+
+    if (isTop) {
+        generateTopAndBottom10Data(root->right, dataFile, count, limit, isTop); // Parcours inversé pour les plus chargés
+    } else {
+        generateTopAndBottom10Data(root->left, dataFile, count, limit, isTop); // Parcours normal pour les moins chargés
+    }
+
+    if (*count < limit) {
+        fprintf(dataFile, "%d %ld %.2f\n", root->key, root->capacity, root->consumption);
+        (*count)++;
+    }
+
+    if (isTop) {
+        generateTopAndBottom10Data(root->left, dataFile, count, limit, isTop);
+    } else {
+        generateTopAndBottom10Data(root->right, dataFile, count, limit, isTop);
+    }
+}
+
+void generateGnuplotScript(const char* scriptPath) {
+    FILE* gp = fopen(scriptPath, "w");
+    if (!gp) {
+        perror("Erreur d'ouverture du fichier Gnuplot");
+        return;
+    }
+
+    fprintf(gp,
+            "set terminal png size 1200,600\n"
+            "set output '/home/cytech/CY_Wire/output/lv_chart.png'\n"
+            "set title 'Top 10 and Bottom 10 LV Stations by Load'\n"
+            "set boxwidth 0.5 relative\n"
+            "set style fill solid\n"
+            "set ylabel 'Load (kW)'\n"
+            "set xlabel 'Station ID'\n"
+            "set xtics rotate by -45\n"
+            "plot '/home/cytech/CY_Wire/output/lv_top10.dat' using 0:3:2:3 with boxes lc rgb 'red' title 'Top 10', \\\n"
+            "     '/home/cytech/CY_Wire/output/lv_bottom10.dat' using 0:3:2:3 with boxes lc rgb 'green' title 'Bottom 10'\n");
+    fclose(gp);
+}
+
 void readline(int columnequal, AVLNode** arbre, FILE* fichier) {
-    char ligne[1024]; // Buffer pour lire chaque ligne du fichier
-    int ligne_num = 0; // Compteur de lignes
+    char ligne[1024];
+    int ligne_num = 0;
 
     while (fgets(ligne, sizeof(ligne), fichier)) {
-        ligne_num++; // Incrémenter le compteur de lignes
+        ligne_num++;
 
-        // Diviser la ligne en colonnes
         char *colonnes[8] = {NULL};
         char *token = strtok(ligne, ";");
         int i = 0;
@@ -24,7 +66,6 @@ void readline(int columnequal, AVLNode** arbre, FILE* fichier) {
             token = strtok(NULL, ";");
         }
 
-        // Vérifier que les colonnes nécessaires sont bien remplies
         if (!colonnes[columnequal] || colonnes[columnequal][0] == '\0') {
             fprintf(stderr, "Ligne %d ignorée : clé vide ou nulle.\n", ligne_num);
             continue;
@@ -35,21 +76,17 @@ void readline(int columnequal, AVLNode** arbre, FILE* fichier) {
             continue;
         }
 
-        // Convertir les colonnes en valeurs
         int key = atoi(colonnes[columnequal]);
         long capacity = atol(colonnes[6]);
         double consumption = (colonnes[7] != NULL && colonnes[7][0] != '-') ? atof(colonnes[7]) : 0.0;
 
-        // Insérer dans l'arbre
         *arbre = insertNode(*arbre, key, capacity, consumption);
     }
 
     printf("Lecture du fichier terminée. Total de lignes lues : %d\n", ligne_num);
 }
 
-// Fonction principale
 int main(int argc, char *argv[]) {
-    // Vérifier que 3 arguments sont fournis
     if (argc != 4) {
         fprintf(stderr, "Usage: %s <station_type> <consumer_type> <plant_id>\n", argv[0]);
         return EXIT_FAILURE;
@@ -59,27 +96,24 @@ int main(int argc, char *argv[]) {
     char *consumer_type = argv[2];
     char *plant_id = argv[3];
 
-    char nomFichier[256]; // Taille suffisante pour stocker le chemin complet
+    char nomFichier[256];
 
-    // Construire le nom de fichier dynamique
     if (strcmp(plant_id, "-1") == 0) {
         sprintf(nomFichier, "tmp/filter_%s_%s.csv", station_type, consumer_type);
     } else {
         sprintf(nomFichier, "tmp/filter_%s_%s_%s.csv", station_type, consumer_type, plant_id);
     }
 
-    // Ouvrir le fichier en mode lecture
     FILE *fichier = fopen(nomFichier, "r");
     if (fichier == NULL) {
         perror("Erreur d'ouverture du fichier");
         return EXIT_FAILURE;
     }
 
-    AVLNode *arbre = NULL; // Initialiser l'arbre à NULL
+    AVLNode *arbre = NULL;
 
-    // Lire les données en fonction du type de station
     if (strcmp(station_type, "hvb") == 0) {
-        readline(1, &arbre, fichier); // Passer l'adresse de l'arbre
+        readline(1, &arbre, fichier);
     } else if (strcmp(station_type, "hva") == 0) {
         readline(2, &arbre, fichier);
     } else if (strcmp(station_type, "lv") == 0) {
@@ -92,13 +126,13 @@ int main(int argc, char *argv[]) {
 
     fclose(fichier);
 
-        struct stat st = {0};
+    struct stat st = {0};
     if (stat("/home/cytech/CY_Wire/output", &st) == -1) {
         mkdir("/home/cytech/CY_Wire/output", 0755);
     }
-    // Créer le fichier CSV de sortie
+
     char outputFichier[256];
-    sprintf(outputFichier, "/home/cytech/CY_Wire/output/output_%s.csv", station_type); // Chemin absolu pour le fichier de sortie
+    sprintf(outputFichier, "/home/cytech/CY_Wire/output/output_%s.csv", station_type);
     FILE *outputFile = fopen(outputFichier, "w");
     if (outputFile == NULL) {
         perror("Erreur d'ouverture du fichier de sortie");
@@ -106,19 +140,39 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Écrire l'en-tête du fichier CSV
     fprintf(outputFile, "ID%s:Capacity:Consumption\n", station_type);
-
-    // Écrire les données triées par capacité dans le fichier CSV
     inorderTraversalToCSV(arbre, outputFile);
 
     printf("Parcours In-Order enregistré dans le fichier : %s\n", outputFichier);
-
-    // Fermer le fichier de sortie
     fclose(outputFile);
 
-    // Libérer la mémoire
-    freeTree(arbre);
+    if (strcmp(station_type, "lv") == 0 && strcmp(consumer_type, "all") == 0) {
+        printf("Génération des graphiques pour les postes LV les plus et moins chargés...\n");
 
+        FILE* top10Data = fopen("/home/cytech/CY_Wire/output/lv_top10.dat", "w");
+        if (!top10Data) {
+            perror("Erreur d'ouverture du fichier pour les 10 postes les plus chargés");
+            freeTree(arbre);
+            return EXIT_FAILURE;
+        }
+        int count = 0;
+        generateTopAndBottom10Data(arbre, top10Data, &count, 10, 1);
+        fclose(top10Data);
+
+        FILE* bottom10Data = fopen("/home/cytech/CY_Wire/output/lv_bottom10.dat", "w");
+        if (!bottom10Data) {
+            perror("Erreur d'ouverture du fichier pour les 10 postes les moins chargés");
+            freeTree(arbre);
+            return EXIT_FAILURE;
+        }
+        count = 0;
+        generateTopAndBottom10Data(arbre, bottom10Data, &count, 10, 0);
+        fclose(bottom10Data);
+
+        generateGnuplotScript("/home/cytech/CY_Wire/output/lv_plot.gp");
+        system("gnuplot /home/cytech/CY_Wire/output/lv_plot.gp");
+    }
+
+    freeTree(arbre);
     return EXIT_SUCCESS;
 }
