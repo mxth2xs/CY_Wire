@@ -99,11 +99,13 @@ void inorderTraversalToCSV(AVLNode* root, FILE* outputFile) {
         return;
     }
 
+    // Parcourir le sous-arbre gauche
     inorderTraversalToCSV(root->left, outputFile);
 
     // Écrire les données du nœud courant dans le fichier
     fprintf(outputFile, "%d:%ld:%.2f\n", root->key, root->capacity, root->consumption);
 
+    // Parcourir le sous-arbre droit
     inorderTraversalToCSV(root->right, outputFile);
 }
 

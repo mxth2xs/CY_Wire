@@ -109,12 +109,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-if [ "$plant_id" == "-1" ]; then
-    echo "Result available at tmp/filter_${station_type}_${consumer_type}.csv"
-else
-    echo "Result available at tmp/filter_${station_type}_${consumer_type}_${plant_id}.csv"
-fi
-
 echo "Processing complete."
 
 end=$(date +%s)
