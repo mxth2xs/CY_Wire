@@ -1,37 +1,44 @@
-# Nom de l'exécutable
-TARGET = main
-
-# Compilateur
+# Variables
 CC = gcc
+CFLAGS = -Wall -Wextra -g
+LDFLAGS =
+SRCDIR = codeC
+OBJDIR = $(SRCDIR)/obj
+BINDIR = $(SRCDIR)/bin
+EXEC = main
 
-# Options de compilation
-CFLAGS = -Wall -Wextra -std=c99 -g
-
-# Fichiers sources
-SRCS = main.c arbre.c
-
-# Fichiers objets (générés automatiquement à partir des sources)
-OBJS = $(SRCS:.c=.o)
+# Liste des fichiers sources et objets
+SRCS = $(wildcard $(SRCDIR)/*.c)
+OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
 
 # Règle par défaut
-all: $(TARGET)
+all: directories $(BINDIR)/$(EXEC)
 
-# Création de l'exécutable
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+# Création des dossiers si nécessaires
+directories:
+	mkdir -p $(OBJDIR)
+	mkdir -p $(BINDIR)
 
-# Compilation des fichiers objets
-%.o: %.c
+# Règle pour générer l'exécutable
+$(BINDIR)/$(EXEC): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
+
+# Règle pour compiler les fichiers objets
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Nettoyage des fichiers générés
+# Nettoyer les fichiers générés
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -rf $(OBJDIR) $(BINDIR)
 
-# Nettoyer tout sauf les fichiers sources
+# Nettoyer les fichiers générés et l'exécutable
 distclean: clean
-	rm -f *~
+	rm -f $(BINDIR)/$(EXEC)
 
-# Exécution (optionnel, pour tester rapidement)
-run: $(TARGET)
-	./$(TARGET)
+# Aide
+help:
+	@echo "Options de Makefile :"
+	@echo "  all        - Compile le programme."
+	@echo "  clean      - Supprime les fichiers objets et les répertoires temporaires."
+	@echo "  distclean  - Supprime tout, y compris l'exécutable."
+	@echo "  help       - Affiche ce message d'aide."
