@@ -101,8 +101,9 @@ fi
 
 # Executing the C program
 echo "Executing the C program..."
+echo $(pwd)
 
-./codeC/main "$station_type" "$consumer_type" "$plant_id"
+./codeC/bin/main "$station_type" "$consumer_type" "$plant_id"
 if [ $? -ne 0 ]; then
     echo "Error: Failed to execute the C program."
     exit 1
