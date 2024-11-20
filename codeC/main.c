@@ -11,9 +11,9 @@ void generateTopAndBottom10Data(AVLNode* root, FILE* dataFile, int* count, int l
     }
 
     if (isTop) {
-        generateTopAndBottom10Data(root->right, dataFile, count, limit, isTop); // Parcours inversé pour les plus chargés
+        generateTopAndBottom10Data(root->right, dataFile, count, limit, isTop);
     } else {
-        generateTopAndBottom10Data(root->left, dataFile, count, limit, isTop); // Parcours normal pour les moins chargés
+        generateTopAndBottom10Data(root->left, dataFile, count, limit, isTop);
     }
 
     if (*count < limit) {
@@ -55,7 +55,6 @@ void readline(int columnequal, AVLNode** arbre, FILE* fichier) {
 
     while (fgets(ligne, sizeof(ligne), fichier)) {
         ligne_num++;
-
         char *colonnes[8] = {NULL};
         char *token = strtok(ligne, ";");
         int i = 0;
@@ -97,7 +96,6 @@ int main(int argc, char *argv[]) {
     char *plant_id = argv[3];
 
     char nomFichier[256];
-
     if (strcmp(plant_id, "-1") == 0) {
         sprintf(nomFichier, "tmp/filter_%s_%s.csv", station_type, consumer_type);
     } else {
@@ -111,7 +109,6 @@ int main(int argc, char *argv[]) {
     }
 
     AVLNode *arbre = NULL;
-
     if (strcmp(station_type, "hvb") == 0) {
         readline(1, &arbre, fichier);
     } else if (strcmp(station_type, "hva") == 0) {
@@ -142,13 +139,9 @@ int main(int argc, char *argv[]) {
 
     fprintf(outputFile, "ID%s:Capacity:Consumption\n", station_type);
     inorderTraversalToCSV(arbre, outputFile);
-
-    printf("Parcours In-Order enregistré dans le fichier : %s\n", outputFichier);
     fclose(outputFile);
 
     if (strcmp(station_type, "lv") == 0 && strcmp(consumer_type, "all") == 0) {
-        printf("Génération des graphiques pour les postes LV les plus et moins chargés...\n");
-
         FILE* top10Data = fopen("/home/cytech/CY_Wire/output/lv_top10.dat", "w");
         if (!top10Data) {
             perror("Erreur d'ouverture du fichier pour les 10 postes les plus chargés");

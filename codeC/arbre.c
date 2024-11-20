@@ -55,37 +55,47 @@ AVLNode* rotateLeft(AVLNode* x) {
 
 // Insertion dans l'arbre AVL
 AVLNode* insertNode(AVLNode* root, int key, long capacity, double consumption) {
+    // Si l'arbre est vide, créer un nouveau nœud
     if (!root) {
         return createNode(key, capacity, consumption);
     }
 
-    if (capacity < root->capacity) {
+    // Insertion récursive
+    if (key < root->key) {
         root->left = insertNode(root->left, key, capacity, consumption);
-    } else if (capacity > root->capacity) {
+    } else if (key > root->key) {
         root->right = insertNode(root->right, key, capacity, consumption);
     } else {
+        // Mise à jour si le nœud existe déjà
+        root->capacity += capacity;
         root->consumption += consumption;
-        root->key = key; // Mettre à jour la clé associée
+        return root;
     }
 
+    // Mise à jour de la hauteur
     root->height = 1 + (getHeight(root->left) > getHeight(root->right) ? getHeight(root->left) : getHeight(root->right));
 
+    // Vérification de l'équilibre et rotations si nécessaires
     int balance = getBalance(root);
 
-    if (balance > 1 && capacity < root->left->capacity) {
+    // Rotation gauche-gauche
+    if (balance > 1 && key < root->left->key) {
         return rotateRight(root);
     }
 
-    if (balance < -1 && capacity > root->right->capacity) {
+    // Rotation droite-droite
+    if (balance < -1 && key > root->right->key) {
         return rotateLeft(root);
     }
 
-    if (balance > 1 && capacity > root->left->capacity) {
+    // Rotation gauche-droite
+    if (balance > 1 && key > root->left->key) {
         root->left = rotateLeft(root->left);
         return rotateRight(root);
     }
 
-    if (balance < -1 && capacity < root->right->capacity) {
+    // Rotation droite-gauche
+    if (balance < -1 && key < root->right->key) {
         root->right = rotateRight(root->right);
         return rotateLeft(root);
     }
@@ -93,23 +103,31 @@ AVLNode* insertNode(AVLNode* root, int key, long capacity, double consumption) {
     return root;
 }
 
-// Parcours In-Order pour écrire dans un fichier CSV
+// Recherche dans l'arbre AVL
+AVLNode* searchNode(AVLNode* root, int key) {
+    if (!root || root->key == key) {
+        return root;
+    }
+
+    if (key < root->key) {
+        return searchNode(root->left, key);
+    } else {
+        return searchNode(root->right, key);
+    }
+}
+
+// Parcours In-Order de l'arbre (pour CSV)
 void inorderTraversalToCSV(AVLNode* root, FILE* outputFile) {
     if (!root) {
         return;
     }
 
-    // Parcourir le sous-arbre gauche
     inorderTraversalToCSV(root->left, outputFile);
-
-    // Écrire les données du nœud courant dans le fichier
     fprintf(outputFile, "%d:%ld:%.2f\n", root->key, root->capacity, root->consumption);
-
-    // Parcourir le sous-arbre droit
     inorderTraversalToCSV(root->right, outputFile);
 }
 
-// Libérer la mémoire
+// Libérer la mémoire de l'arbre AVL
 void freeTree(AVLNode* root) {
     if (root) {
         freeTree(root->left);

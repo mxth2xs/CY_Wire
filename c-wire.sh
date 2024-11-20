@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Shell Script for the C-Wire Project
-# Author: Pfleger Paul, Da Costa Silva Mathias
 # Usage: ./c-wire.sh csv_file_path station_type consumer_type [plant_id]
 
 start=$(date +%s)
@@ -86,6 +85,11 @@ BEGIN { OFS=";" }
         if (plant == "-1" || $1 == plant) print $0;
     }
 }' "$csv_file" > "$filtered_file"
+
+if [ ! -s "$filtered_file" ]; then
+    echo "Error: No data found for the specified parameters."
+    exit 1
+fi
 
 echo "Filtered data saved to $filtered_file"
 
