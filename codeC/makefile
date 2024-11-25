@@ -6,33 +6,33 @@ OBJDIR = obj
 BINDIR = bin
 EXEC = main
 
-# Pour désactiver les message Entering directory et Leaving directory
+# To disable the Entering directory and Leaving directory messages
 MAKEFLAGS += --no-print-directory
 
-# Détecter automatiquement les fichiers source et objets
+# Automatically detect source and object files
 SRCS = $(wildcard *.c)
 OBJS = $(patsubst %.c, $(OBJDIR)/%.o, $(SRCS))
 
-# Règle par défaut
+# Default rule
 all: directories $(BINDIR)/$(EXEC)
 
-# Création des dossiers si nécessaires
+# Creation of folders if necessary
 directories:
 	@mkdir -p $(OBJDIR)
 	@mkdir -p $(BINDIR)
 
-# Compilation de l'exécutable
+# Compiling the executable
 $(BINDIR)/$(EXEC): $(OBJS)
 	@$(CC) $(LDFLAGS) -o $@ $^
 
-# Compilation des fichiers objets
+# Compiling object files
 $(OBJDIR)/%.o: %.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# Nettoyage des fichiers temporaires
+# Cleaning temporary files
 clean:
 	@rm -rf $(OBJDIR)
 
-# Nettoyage complet (inclut l'exécutable)
+# Full cleanup (includes executable)
 distclean: clean
 	@rm -rf $(BINDIR)
