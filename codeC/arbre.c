@@ -1,6 +1,6 @@
 #include "arbre.h"
 
-// Créer un nœud de l'arbre
+// Create a tree node
 AVLNode* createNode(int key, long capacity, double consumption) {
     AVLNode* node = (AVLNode*)malloc(sizeof(AVLNode));
     if (!node) {
@@ -11,21 +11,21 @@ AVLNode* createNode(int key, long capacity, double consumption) {
     node->capacity = capacity;
     node->consumption = consumption;
     node->left = node->right = NULL;
-    node->height = 1; // Hauteur initiale
+    node->height = 1; // Initial height
     return node;
 }
 
-// Obtenir la hauteur d'un nœud
+// Get the height of a node
 int getHeight(AVLNode* node) {
     return node ? node->height : 0;
 }
 
-// Calculer le facteur d'équilibre
+// Calculate the balance factor
 int getBalance(AVLNode* node) {
     return node ? getHeight(node->left) - getHeight(node->right) : 0;
 }
 
-// Rotation droite
+// Right rotation
 AVLNode* rotateRight(AVLNode* y) {
     AVLNode* x = y->left;
     AVLNode* T = x->right;
@@ -39,7 +39,7 @@ AVLNode* rotateRight(AVLNode* y) {
     return x;
 }
 
-// Rotation gauche
+// Left rotation
 AVLNode* rotateLeft(AVLNode* x) {
     AVLNode* y = x->right;
     AVLNode* T = y->left;
@@ -53,48 +53,48 @@ AVLNode* rotateLeft(AVLNode* x) {
     return y;
 }
 
-// Insertion dans l'arbre AVL
+// Insert into the AVL tree
 AVLNode* insertNode(AVLNode* root, int key, long capacity, double consumption) {
-    // Si l'arbre est vide, créer un nouveau nœud
+    // If the tree is empty, create a new node
     if (!root) {
         return createNode(key, capacity, consumption);
     }
 
-    // Insertion récursive
+    // Recursive insertion
     if (key < root->key) {
         root->left = insertNode(root->left, key, capacity, consumption);
     } else if (key > root->key) {
         root->right = insertNode(root->right, key, capacity, consumption);
     } else {
-        // Mise à jour si le nœud existe déjà
+        // Update if the node already exists
         root->capacity += capacity;
         root->consumption += consumption;
         return root;
     }
 
-    // Mise à jour de la hauteur
+    // Update the height
     root->height = 1 + (getHeight(root->left) > getHeight(root->right) ? getHeight(root->left) : getHeight(root->right));
 
-    // Vérification de l'équilibre et rotations si nécessaires
+    // Check balance and perform rotations if necessary
     int balance = getBalance(root);
 
-    // Rotation gauche-gauche
+   // Left-left rotation
     if (balance > 1 && key < root->left->key) {
         return rotateRight(root);
     }
 
-    // Rotation droite-droite
+    // Right-right rotation
     if (balance < -1 && key > root->right->key) {
         return rotateLeft(root);
     }
 
-    // Rotation gauche-droite
+    // Left-right rotation
     if (balance > 1 && key > root->left->key) {
         root->left = rotateLeft(root->left);
         return rotateRight(root);
     }
 
-    // Rotation droite-gauche
+    // Right-left rotation
     if (balance < -1 && key < root->right->key) {
         root->right = rotateRight(root->right);
         return rotateLeft(root);
@@ -103,7 +103,7 @@ AVLNode* insertNode(AVLNode* root, int key, long capacity, double consumption) {
     return root;
 }
 
-// Recherche dans l'arbre AVL
+// Search in the AVL tree
 AVLNode* searchNode(AVLNode* root, int key) {
     if (!root || root->key == key) {
         return root;
@@ -116,7 +116,7 @@ AVLNode* searchNode(AVLNode* root, int key) {
     }
 }
 
-// Parcours In-Order de l'arbre (pour CSV)
+// In-order traversal of the tree (for CSV)
 void inorderTraversalToCSV(AVLNode* root, FILE* outputFile) {
     if (!root) {
         return;
@@ -127,7 +127,7 @@ void inorderTraversalToCSV(AVLNode* root, FILE* outputFile) {
     inorderTraversalToCSV(root->right, outputFile);
 }
 
-// Libérer la mémoire de l'arbre AVL
+// Free the memory of the AVL tree
 void freeTree(AVLNode* root) {
     if (root) {
         freeTree(root->left);
