@@ -4,17 +4,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Structure de nœud pour un arbre AVL
+// Node structure for an AVL tree
 typedef struct AVLNode {
-    int key;                   // Clé unique (par ex., ID de la station)
-    long capacity;             // Capacité totale
-    double consumption;        // Consommation totale
-    struct AVLNode* left;      // Sous-arbre gauche
-    struct AVLNode* right;     // Sous-arbre droit
-    int height;                // Hauteur du nœud
+    int key;                   // Unique key (eg. station ID)
+    long capacity;             // Total capacity
+    double consumption;        // Total consumption
+    struct AVLNode* left;      // Left subtree
+    struct AVLNode* right;     // Right subtree
+    int height;                // Node height
 } AVLNode;
 
-// Prototypes des fonctions AVL
+// AVL Function Prototypes
 AVLNode* createNode(int key, long capacity, double consumption);
 int getHeight(AVLNode* node);
 int getBalance(AVLNode* node);
@@ -22,7 +22,7 @@ AVLNode* rotateRight(AVLNode* y);
 AVLNode* rotateLeft(AVLNode* x);
 AVLNode* insertNode(AVLNode* root, int key, long capacity, double consumption);
 AVLNode* searchNode(AVLNode* root, int key);
-void inorderTraversalToCSV(AVLNode* root, FILE* outputFile); // Déclaration ajoutée
+void inorderTraversalToCSV(AVLNode* root, FILE* outputFile); // Added statement
 void freeTree(AVLNode* root);
 
 #endif
