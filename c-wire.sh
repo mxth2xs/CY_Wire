@@ -1,14 +1,30 @@
 #!/bin/bash
 
-# Shell Script for the C-Wire Project
+# Shell script for the C-Wire Project
 # Usage: ./c-wire.sh csv_file_path station_type consumer_type [plant_id]
+
+# Check for help option
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: $0 csv_file_path station_type consumer_type [plant_id]"
+    echo
+    echo "Parameters:"
+    echo "  csv_file_path : Path to the CSV input file"
+    echo "  station_type  : hvb | hva | lv"
+    echo "  consumer_type : comp | indiv | all"
+    echo "  plant_id      : Optional, defaults to -1 if not provided"
+    echo
+    echo "Examples:"
+    echo "  $0 data.csv lv all"
+    echo "  $0 data.csv hvb comp 1234"
+    exit 0
+fi
 
 start=$(date +%s)
 
-# Parameter validation
+# Parameter count check
 if [ "$#" -lt 3 ]; then
     echo "Error: Insufficient number of parameters."
-    echo "Usage: ./c-wire.sh csv_file_path station_type consumer_type [plant_id]"
+    echo "Use -h for help."
     exit 1
 fi
 
@@ -16,7 +32,7 @@ fi
 csv_file="$1"
 station_type="$2"
 consumer_type="$3"
-plant_id="${4:--1}" # Optional, defaults to -1 if not provided
+plant_id="${4:--1}"
 
 # Input file validation
 if [ ! -f "$csv_file" ]; then
@@ -26,17 +42,17 @@ fi
 
 # Station type validation
 if [[ "$station_type" != "hvb" && "$station_type" != "hva" && "$station_type" != "lv" ]]; then
-    echo "Error: Invalid station type. Valid options are: hvb, hva, lv."
+    echo "Error: Invalid station type. Valid options: hvb, hva, lv."
     exit 1
 fi
 
 # Consumer type validation
 if [[ "$consumer_type" != "comp" && "$consumer_type" != "indiv" && "$consumer_type" != "all" ]]; then
-    echo "Error: Invalid consumer type. Valid options are: comp, indiv, all."
+    echo "Error: Invalid consumer type. Valid options: comp, indiv, all."
     exit 1
 fi
 
-# Plant ID validation (if provided)
+# Plant ID validation if provided
 if [ "$plant_id" != "-1" ]; then
     echo "Checking plant ID: $plant_id"
     valid_id=$(awk -F';' -v id="$plant_id" '$1 == id {print $1; exit}' "$csv_file")
@@ -46,32 +62,31 @@ if [ "$plant_id" != "-1" ]; then
     fi
 fi
 
-# Prohibiting certain options
+# Prohibited options
 if [[ "$station_type" == "hvb" && ( "$consumer_type" == "all" || "$consumer_type" == "indiv" ) ]]; then
-    echo "Error: Options hvb all or hvb indiv are not allowed."
+    echo "Error: hvb all or hvb indiv options are not allowed."
     exit 1
 fi
 
 if [[ "$station_type" == "hva" && ( "$consumer_type" == "all" || "$consumer_type" == "indiv" ) ]]; then
-    echo "Error: Options hva all or hva indiv are not allowed."
+    echo "Error: hva all or hva indiv options are not allowed."
     exit 1
 fi
 
-# Creating necessary directories
+# Create necessary directories
 mkdir -p tmp output
 
-# Clearing the tmp directory
+# Clear tmp and output directories
 rm -f tmp/*
 rm -f output/*
 
-# Preparing the temporary file
 if [ "$plant_id" == "-1" ]; then
     filtered_file="tmp/filter_${station_type}_${consumer_type}.csv"
 else
     filtered_file="tmp/filter_${station_type}_${consumer_type}_${plant_id}.csv"
 fi
 
-# Filtering data from the CSV file
+# Filtering data
 awk -F';' -v station="$station_type" -v consumer="$consumer_type" -v plant="$plant_id" '
 BEGIN { OFS=";" }
 {
@@ -93,17 +108,16 @@ fi
 
 echo "Filtered data saved to $filtered_file"
 
-# Checking and compiling the C program
+echo "Cleaning previous builds..."
+make -C codeC clean
+
+echo "Compiling the C program..."
+make -s -C codeC
 if [ ! -f "codeC/bin/main" ]; then
-    echo "Compiling the C program..."
-    make -s -C codeC
-    if [ $? -ne 0 ]; then
-        echo "Error: Failed to compile the C program."
-        exit 1
-    fi
+    echo "Error: Failed to compile the C program."
+    exit 1
 fi
 
-# Executing the C program
 echo "Executing the C program..."
 ./codeC/bin/main "$station_type" "$consumer_type" "$plant_id"
 if [ $? -ne 0 ]; then
@@ -111,33 +125,18 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Generate graphs if lv all
+# If station_type=lv and consumer_type=all, generate graphs
 if [[ "$station_type" == "lv" && "$consumer_type" == "all" ]]; then
     echo "Generating graphs for LV all..."
     
-    # Verify if data files for Gnuplot exist
-    top10_data="output/lv_top10.dat"
-    bottom10_data="output/lv_bottom10.dat"
-    plot_script="output/lv_plot.gp"
-    chart_output="output/lv_chart.png"
+    top10_data="output/top10_lv_all.csv"
+    bottom10_data="output/bottom10_lv_all.csv"
+    script_path="output/plot_lv_all.gp"
+    chart_output="output/chart_lv_all.png"
 
     if [[ -f "$top10_data" && -f "$bottom10_data" ]]; then
-        echo "Creating Gnuplot script..."
-        cat <<EOF > "$plot_script"
-set terminal png size 1200,600
-set output "$chart_output"
-set title "Top 10 and Bottom 10 LV Stations by Load"
-set boxwidth 0.5 relative
-set style fill solid
-set ylabel "Load (kW)"
-set xlabel "Station ID"
-set xtics rotate by -45
-plot "$top10_data" using 0:3:2:3 with boxes lc rgb "red" title "Top 10", \
-     "$bottom10_data" using 0:3:2:3 with boxes lc rgb "green" title "Bottom 10"
-EOF
-
         echo "Executing Gnuplot..."
-        gnuplot "$plot_script"
+        gnuplot "$script_path"
 
         if [ $? -eq 0 ]; then
             echo "Graph successfully generated: $chart_output"
