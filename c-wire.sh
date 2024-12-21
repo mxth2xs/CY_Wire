@@ -4,20 +4,22 @@
 # Usage: ./c-wire.sh csv_file_path station_type consumer_type [plant_id]
 
 # Check for help option
-if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: $0 csv_file_path station_type consumer_type [plant_id]"
-    echo
-    echo "Parameters:"
-    echo "  csv_file_path : Path to the CSV input file"
-    echo "  station_type  : hvb | hva | lv"
-    echo "  consumer_type : comp | indiv | all"
-    echo "  plant_id      : Optional, defaults to -1 if not provided"
-    echo
-    echo "Examples:"
-    echo "  $0 data.csv lv all"
-    echo "  $0 data.csv hvb comp 1234"
-    exit 0
-fi
+for arg in "$@"; do
+    if [ "$arg" = "-h" ] || [ "$arg" = "--help" ]; then
+        echo "Usage: $0 csv_file_path station_type consumer_type [plant_id]"
+        echo
+        echo "Parameters:"
+        echo "  csv_file_path : Path to the CSV input file"
+        echo "  station_type  : hvb | hva | lv"
+        echo "  consumer_type : comp | indiv | all"
+        echo "  plant_id      : Optional, defaults to -1 if not provided"
+        echo
+        echo "Examples:"
+        echo "  $0 data.csv lv all"
+        echo "  $0 data.csv hvb comp 1234"
+        exit 0
+    fi
+done
 
 start=$(date +%s)
 

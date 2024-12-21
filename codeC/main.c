@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "arbre.h"
+#include "tree.h"
 
 // Structure to dynamically hold station data
 typedef struct {
@@ -12,6 +12,15 @@ typedef struct {
 } StationDiff;
 
 int compareByDifference(const void* a, const void* b) {
+/**
+ * @brief Compares two StationDiff structures by their difference values.
+ * 
+ * @param a Pointer to the first StationDiff structure.
+ * @param b Pointer to the second StationDiff structure.
+ * @return An integer less than, equal to, or greater than zero if the difference
+ *         of the first structure is less than, equal to, or greater than that of the second.
+ */
+
     const StationDiff* stationA = (const StationDiff*)a;
     const StationDiff* stationB = (const StationDiff*)b;
 
@@ -21,6 +30,15 @@ int compareByDifference(const void* a, const void* b) {
 }
 
 int compareByCapacity(const void* a, const void* b) {
+/**
+ * @brief Compares two StationDiff structures by their capacity values.
+ * 
+ * @param a Pointer to the first StationDiff structure.
+ * @param b Pointer to the second StationDiff structure.
+ * @return An integer less than, equal to, or greater than zero if the capacity
+ *         of the first structure is less than, equal to, or greater than that of the second.
+ */
+
     const StationDiff* stationA = (const StationDiff*)a;
     const StationDiff* stationB = (const StationDiff*)b;
 
@@ -30,6 +48,15 @@ int compareByCapacity(const void* a, const void* b) {
 }
 
 void collectStations(AVLNode* root, StationDiff** stations, int* count, int* size) {
+/**
+ * @brief Collects all stations from an AVL tree into a dynamic array of StationDiff structures.
+ * 
+ * @param root The root of the AVL tree.
+ * @param stations Pointer to the dynamic array of StationDiff structures.
+ * @param count Pointer to the number of stations collected so far.
+ * @param size Pointer to the current size of the dynamic array.
+ */
+
     if (!root) return;
 
     collectStations(root->left, stations, count, size);
@@ -53,6 +80,13 @@ void collectStations(AVLNode* root, StationDiff** stations, int* count, int* siz
 }
 
 void inorderTraversalToSortedFile(AVLNode* root, FILE* outputFile) {
+/**
+ * @brief Performs an inorder traversal of the AVL tree and writes sorted stations to a file.
+ * 
+ * @param root The root of the AVL tree.
+ * @param outputFile The file to write the sorted station data.
+ */
+
     if (!root) return;
 
     int count = 0;
@@ -74,6 +108,15 @@ void inorderTraversalToSortedFile(AVLNode* root, FILE* outputFile) {
 }
 
 void generateTopAndBottom10(AVLNode* root, FILE* topFile, FILE* bottomFile, int limit) {
+/**
+ * @brief Generates the top and bottom 10 stations by difference and writes them to separate files.
+ * 
+ * @param root The root of the AVL tree.
+ * @param topFile The file to write the top stations with the largest differences.
+ * @param bottomFile The file to write the bottom stations with the smallest differences.
+ * @param limit The number of stations to include in each file.
+ */
+
     if (!root) return;
 
     int count = 0;
@@ -107,6 +150,15 @@ void generateTopAndBottom10(AVLNode* root, FILE* topFile, FILE* bottomFile, int 
 }
 
 void generateGnuplotScript(const char* scriptPath, const char* top10Path, const char* bottom10Path, const char* outputPath) {
+/**
+ * @brief Generates a Gnuplot script for visualizing the top and bottom 10 stations.
+ * 
+ * @param scriptPath The path to save the Gnuplot script file.
+ * @param top10Path The path to the file containing the top 10 stations.
+ * @param bottom10Path The path to the file containing the bottom 10 stations.
+ * @param outputPath The path to save the generated chart image.
+ */
+
     FILE* gp = fopen(scriptPath, "w");
     if (!gp) {
         perror("Error opening Gnuplot script file");
@@ -133,6 +185,14 @@ void generateGnuplotScript(const char* scriptPath, const char* top10Path, const 
 }
 
 void readLines(int columnIndex, AVLNode** tree, FILE* file) {
+/**
+ * @brief Reads lines from a CSV file and inserts them as nodes into an AVL tree.
+ * 
+ * @param columnIndex The column index in the CSV file that represents the key.
+ * @param tree Pointer to the root of the AVL tree.
+ * @param file The input file to read data from.
+ */
+
     char line[1024];
     int lineNumber = 0;
 
@@ -169,6 +229,15 @@ void readLines(int columnIndex, AVLNode** tree, FILE* file) {
 }
 
 int main(int argc, char *argv[]) {
+/**
+ * @brief The main entry point of the program. Parses command-line arguments, processes input data,
+ *        performs AVL tree operations, generates files, and optionally visualizes data.
+ * 
+ * @param argc The number of command-line arguments.
+ * @param argv The array of command-line arguments.
+ * @return EXIT_SUCCESS on successful execution, or EXIT_FAILURE on error.
+ */
+
     if (argc != 4) {
         fprintf(stderr, "Usage: %s <station_type> <consumer_type> <plant_id>\n", argv[0]);
         return EXIT_FAILURE;
