@@ -292,6 +292,7 @@ int main(int argc, char *argv[]) {
 
     // Only generate top/bottom 10 and plot if station_type=lv and consumer_type=all
     if (strcmp(station_type, "lv") == 0 && strcmp(consumer_type, "all") == 0) {
+        // Open top10 and bottom10 files for writing
         FILE* top10File = fopen("output/top10_lv_all.csv", "w");
         FILE* bottom10File = fopen("output/bottom10_lv_all.csv", "w");
         if (!top10File || !bottom10File) {
@@ -300,10 +301,95 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
 
+        // Generate top and bottom 10 stations
         generateTopAndBottom10(tree, top10File, bottom10File, 10);
 
+        // Close the top and bottom files before processing them
         fclose(top10File);
         fclose(bottom10File);
+
+        // Now, open the same files for reading
+        top10File = fopen("output/top10_lv_all.csv", "r");
+        bottom10File = fopen("output/bottom10_lv_all.csv", "r");
+        if (!top10File || !bottom10File) {
+            perror("Error opening top/bottom 10 files");
+            freeTree(tree);
+            return EXIT_FAILURE;
+        }
+
+        // Allocate space for merged data
+        int size = 1024;
+        int count = 0;
+        StationDiff* stations = malloc(size * sizeof(StationDiff));
+        if (!stations) {
+            perror("Memory allocation error");
+            fclose(top10File);
+            fclose(bottom10File);
+            return EXIT_FAILURE;
+        }
+
+        // Read from the top file and add to stations array
+        char line[1024];
+        while (fgets(line, sizeof(line), top10File)) {
+            if (count >= size) {
+                size *= 2;
+                stations = realloc(stations, size * sizeof(StationDiff));
+                if (!stations) {
+                    perror("Memory reallocation error");
+                    fclose(top10File);
+                    fclose(bottom10File);
+                    return EXIT_FAILURE;
+                }
+            }
+
+            // Parse line
+            sscanf(line, "%d:%ld:%lf:%lf", &stations[count].key, &stations[count].capacity,
+                   &stations[count].consumption, &stations[count].difference);
+            count++;
+        }
+
+        // Read from the bottom file and add to stations array
+        while (fgets(line, sizeof(line), bottom10File)) {
+            if (count >= size) {
+                size *= 2;
+                stations = realloc(stations, size * sizeof(StationDiff));
+                if (!stations) {
+                    perror("Memory reallocation error");
+                    fclose(top10File);
+                    fclose(bottom10File);
+                    return EXIT_FAILURE;
+                }
+            }
+
+            // Parse line
+            sscanf(line, "%d:%ld:%lf:%lf", &stations[count].key, &stations[count].capacity,
+                   &stations[count].consumption, &stations[count].difference);
+            count++;
+        }
+
+        // Sort the stations array by the difference column
+        qsort(stations, count, sizeof(StationDiff), compareByDifference);
+
+        // Write the sorted data to lv_all_minmax.csv
+        FILE* outputFile = fopen("output/lv_all_minmax.csv", "w");
+        if (!outputFile) {
+            perror("Error opening output file");
+            fclose(top10File);
+            fclose(bottom10File);
+            free(stations);
+            return EXIT_FAILURE;
+        }
+
+        for (int i = 0; i < count; i++) {
+            fprintf(outputFile, "%d:%ld:%.2f:%.2f\n", stations[i].key,
+                    stations[i].capacity, stations[i].consumption, stations[i].difference);
+        }
+
+        // Clean up
+        fclose(top10File);
+        fclose(bottom10File);
+        fclose(outputFile);
+        free(stations);
 
         char scriptPath[256];
         sprintf(scriptPath, "output/plot_%s_%s.gp", station_type, consumer_type);
