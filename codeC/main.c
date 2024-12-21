@@ -301,8 +301,40 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
 
-        // Generate top and bottom 10 stations
-        generateTopAndBottom10(tree, top10File, bottom10File, 10);
+        FILE *file;
+        char ch;
+        int line_count = 0;
+
+        // Ouvrir le fichier en mode lecture
+        file = fopen("output/sorted_lv_all.csv", "r");
+        if (file == NULL) {
+            printf("Impossible d'ouvrir le fichier.\n");
+            return 1; // Sortir si le fichier ne peut pas être ouvert
+        }
+
+        // Lire le fichier caractère par caractère
+        while ((ch = fgetc(file)) != EOF && line_count<20) {
+            if (ch == '\n') {
+                line_count++; // Compter les nouvelles lignes
+            }
+        }
+
+        // Si le fichier ne se termine pas par une nouvelle ligne, on compte la dernière ligne
+        if (line_count == 0 && ch == EOF && ftell(file) > 0) {
+            line_count = 1;
+        }
+
+        // Fermer le fichier
+        fclose(file);
+
+
+        // Generate top and bottom 10 stations if line_count>=20;
+        if(line_count>=20){
+            generateTopAndBottom10(tree, top10File, bottom10File, 10);
+        }
+        else{
+            generateTopAndBottom10(tree, top10File, bottom10File, line_count/2);
+        }
 
         // Close the top and bottom files before processing them
         fclose(top10File);
