@@ -65,6 +65,7 @@ CY_Wire
 │   └── <generated results>
 ├── tmp
 │   └── <temporary files - can be ignored>
+├── .gitignore
 ├── c-wire.sh
 ├── LICENSE
 └── README.md
