@@ -92,13 +92,19 @@ fi
 awk -F';' -v station="$station_type" -v consumer="$consumer_type" -v plant="$plant_id" '
 BEGIN { OFS=";" }
 {
-    if (station == "hvb" && $2 != "-" && $6 == "-" && (consumer == "comp" || consumer == "all")) {
+    if (station == "hvb" && $2 != "-" && $6 == "-") {
         if (plant == "-1" || $1 == plant) print $0;
     }
-    else if (station == "hva" && $3 != "-" && $6 == "-" && (consumer == "comp" || consumer == "all")) {
+    else if (station == "hva" && $3 != "-" && $6 == "-") {
         if (plant == "-1" || $1 == plant) print $0;
     }
-    else if (station == "lv" && $4 != "-" && $1 != "Power plant" && (consumer == "comp" || consumer == "indiv" || consumer == "all")) {
+    else if (station == "lv" && $4 != "-" && $1 != "Power plant" && consumer == "indiv" && $5 == "-") {
+        if (plant == "-1" || $1 == plant) print $0;
+    }
+    else if (station == "lv" && $4 != "-" && $1 != "Power plant" && consumer == "comp" && $6 == "-") {
+        if (plant == "-1" || $1 == plant) print $0;
+    }
+    else if (station == "lv" && $4 != "-" && $1 != "Power plant" && consumer == "all") {
         if (plant == "-1" || $1 == plant) print $0;
     }
 }' "$csv_file" > "$filtered_file"
