@@ -166,20 +166,22 @@ void generateGnuplotScript(const char* scriptPath, const char* top10Path, const 
     }
 
     fprintf(gp,
-        "set terminal png size 1200,600\n"
-        "set output '%s'\n"
-        "set title 'Top 10 and Bottom 10 Stations by Difference'\n"
-        "set boxwidth 0.5 relative\n"
-        "set style fill solid border -1\n"
-        "set ylabel 'Difference (kW)'\n"
-        "set xlabel 'Station ID'\n"
-        "set xtics rotate by -45\n"
-        "set yrange [*:*]\n"
-        "set grid ytics\n"
-        "set datafile separator \":\"\n"
-        "plot '%s' using 4:xtic(1) with boxes title 'Overload (Top 10)' lc rgb 'red',\\\n"
-        "     '%s' using 4:xtic(1) with boxes title 'Underutilized (Bottom 10)' lc rgb 'green'\n",
-        outputPath, top10Path, bottom10Path);
+    "set logscale y\n"
+    "set terminal png size 1200,600\n"
+    "set output '%s'\n"
+    "set title 'Top 10 and Bottom 10 Stations by Difference'\n"
+    "set boxwidth 0.4 relative\n" // Réduit la largeur des barres
+    "set style fill solid border -1\n"
+    "set ylabel 'Difference (kW)'\n"
+    "set xlabel 'Station ID'\n"
+    "set xtics rotate by -45\n"
+    "set grid ytics\n"
+    "set datafile separator \":\"\n"
+    "plot '%s' using ($0-0.2):4:xtic(1) with boxes title 'Overload (Top 10)' lc rgb 'red',\\\n"
+    "     '%s' using ($0+0.2):($4*(-1)):xtic(1) with boxes title 'Underutilized (Bottom 10)' lc rgb 'green'\n",
+    outputPath, top10Path, bottom10Path);
+    
+
 
     fclose(gp);
 }
