@@ -98,9 +98,13 @@ CY_Wire
 2. Navigate to the project directory:  
    ```bash
    cd CY_Wire  
-   ```  
-3. Prepare your data by following the "[How to Use](#how-to-use)" section.  
-4. Execute the script with the desired parameters or use:  
+   ```
+3. Make sure that you have GnuPlot
+   ```bash
+   sudo apt-get install gnuplot    
+   ```
+4. Prepare your data by following the "[How to Use](#how-to-use)" section.  
+5. Execute the script with the desired parameters or use:  
    ```bash
    ./c-wire.sh -h  
    ```  
